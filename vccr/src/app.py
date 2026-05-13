@@ -9,8 +9,8 @@ from system_prompt import SYSTEM_PROMPT
 DB_PATH = "../data/agent.db"
 AZURE_OPENAI_API_KEY = os.environ.get("AZURE_OPENAI_API_KEY")
 AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")
-AZURE_OPENAI_API_VERSION = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-12-01-preview")
-AZURE_OPENAI_DEPLOYMENT = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1-mini")
+AZURE_OPENAI_API_VERSION = "2024-12-01-preview"
+AZURE_OPENAI_DEPLOYMENT = "gpt-4.1-mini"
 
 # ── LLM ────────────────────────────────────────────────────────────────
 if not AZURE_OPENAI_API_KEY or not AZURE_OPENAI_ENDPOINT:
