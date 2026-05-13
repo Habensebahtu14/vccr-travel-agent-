@@ -2,14 +2,27 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 import os
-from anthropic import Anthropic
+from openai import AzureOpenAI
 from system_prompt import SYSTEM_PROMPT
 
 # ── Config ─────────────────────────────────────────────────────────────
 DB_PATH = "../data/agent.db"
+AZURE_OPENAI_API_KEY = os.environ.get("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_ENDPOINT = os.environ.get("AZURE_OPENAI_ENDPOINT")
+AZURE_OPENAI_API_VERSION = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-12-01-preview")
+AZURE_OPENAI_DEPLOYMENT = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4.1-mini")
 
 # ── LLM ────────────────────────────────────────────────────────────────
-anthropic_client = Anthropic()
+if not AZURE_OPENAI_API_KEY or not AZURE_OPENAI_ENDPOINT:
+    raise ValueError(
+        "Please set AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT in your environment."
+    )
+
+llm = AzureOpenAI(
+    api_key=AZURE_OPENAI_API_KEY,
+    azure_endpoint=AZURE_OPENAI_ENDPOINT,
+    api_version=AZURE_OPENAI_API_VERSION,
+)
 
 # ── Database functies ──────────────────────────────────────────────────
 def voer_sql_uit(sql):
@@ -52,8 +65,14 @@ def stel_vraag(vraag, pers_nummer, groep):
         {"role": "user", "content": vraag}
     ]
     
-    response = llm.invoke(messages)
-    llm_antwoord = response.content
+    response = llm.chat.completions.create(
+        messages=messages,
+        model=AZURE_OPENAI_DEPLOYMENT,
+        max_completion_tokens=1000,
+        temperature=0.7,
+        top_p=1.0,
+    )
+    llm_antwoord = response.choices[0].message.content
     
     if "```sql" in llm_antwoord:
         sql = llm_antwoord.split("```sql")[1].split("```")[0].strip()
@@ -65,8 +84,14 @@ def stel_vraag(vraag, pers_nummer, groep):
             f"Geef nu een duidelijk antwoord in het Nederlands. Geen SQL meer."
         })
         
-        final_response = llm.invoke(messages)
-        return final_response.content
+        final_response = llm.chat.completions.create(
+            messages=messages,
+            model=AZURE_OPENAI_DEPLOYMENT,
+            max_completion_tokens=1000,
+            temperature=0.7,
+            top_p=1.0,
+        )
+        return final_response.choices[0].message.content
     else:
         return llm_antwoord
 
